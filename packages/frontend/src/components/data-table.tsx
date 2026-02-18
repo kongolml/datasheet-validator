@@ -2,11 +2,11 @@ import {
 	type ColumnDef,
 	flexRender,
 	getCoreRowModel,
-	getPaginationRowModel,
 	getSortedRowModel,
 	type SortingState,
 	useReactTable,
 } from "@tanstack/react-table";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { useState, useCallback, useRef, useEffect, memo } from "react";
 import type {
 	Column,
@@ -15,7 +15,7 @@ import type {
 	CellType,
 	ValidationError,
 } from "@data-validator/validator-mastermind";
-import { ArrowUpDown, ChevronLeft, ChevronRight, OctagonAlert } from "lucide-react";
+import { ArrowUpDown, OctagonAlert } from "lucide-react";
 
 import {
 	Table,
@@ -34,6 +34,12 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { Field } from "./ui/field";
 
@@ -73,17 +79,6 @@ function parseEditValue(input: string, type: CellType): CellValue {
 	}
 }
 
-function getPageNumbers(pageCount: number, currentPage: number): (number | "...")[] {
-	if (pageCount <= 7) return Array.from({ length: pageCount }, (_, i) => i);
-	const pages: (number | "...")[] = [0];
-	const start = Math.max(1, currentPage - 2);
-	const end = Math.min(pageCount - 2, currentPage + 2);
-	if (start > 1) pages.push("...");
-	for (let i = start; i <= end; i++) pages.push(i);
-	if (end < pageCount - 2) pages.push("...");
-	pages.push(pageCount - 1);
-	return pages;
-}
 
 interface EditableCellProps {
 	value: CellValue;
@@ -237,14 +232,21 @@ const EditableCell = memo(function EditableCell({
 					)}
 					tabIndex={0}
 					role="gridcell"
-					title={
-						hasErrors
-							? errors.map((e) => e.message).join(", ")
-							: "Click to edit"
-					}
+					title="Click to edit"
 				>
 					<span>{formatCellValue(value, columnType)}</span>
-					{hasErrors && <OctagonAlert size={16} className="text-destructive" />}
+					{hasErrors && (
+						<TooltipProvider>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<OctagonAlert size={16} className="text-destructive" />
+								</TooltipTrigger>
+								<TooltipContent>
+									{errors.map((e) => e.message).join(", ")}
+								</TooltipContent>
+							</Tooltip>
+						</TooltipProvider>
+					)}
 				</div>
 			</PopoverTrigger>
 			<PopoverContent
@@ -335,10 +337,12 @@ interface DataTableProps {
 	rows: Row[];
 	onCellUpdate?: (rowId: string, columnKey: string, value: CellValue) => void;
 	className?: string;
+	height?: string;
 }
 
-function DataTable({ columns, rows, onCellUpdate, className }: DataTableProps) {
+function DataTable({ columns, rows, onCellUpdate, className, height = "600px" }: DataTableProps) {
 	const [sorting, setSorting] = useState<SortingState>([]);
+	const parentRef = useRef<HTMLDivElement>(null);
 
 	const tableColumns = buildColumns(columns, onCellUpdate);
 
@@ -347,22 +351,31 @@ function DataTable({ columns, rows, onCellUpdate, className }: DataTableProps) {
 		columns: tableColumns,
 		getCoreRowModel: getCoreRowModel(),
 		getSortedRowModel: getSortedRowModel(),
-		getPaginationRowModel: getPaginationRowModel(),
 		onSortingChange: setSorting,
 		state: { sorting },
 		getRowId: (row) => row.id,
-		initialState: { pagination: { pageSize: 50 } },
 	});
 
-	const { pageIndex, pageSize } = table.getState().pagination;
-	const pageCount = table.getPageCount();
+	const tableRows = table.getRowModel().rows;
+
+	const rowVirtualizer = useVirtualizer({
+		count: tableRows.length,
+		getScrollElement: () => parentRef.current,
+		estimateSize: () => 44,
+		overscan: 10,
+	});
+
+	const virtualRows = rowVirtualizer.getVirtualItems();
+	const totalSize = rowVirtualizer.getTotalSize();
+	const paddingTop = virtualRows.length > 0 ? virtualRows[0].start : 0;
+	const paddingBottom =
+		virtualRows.length > 0 ? totalSize - virtualRows[virtualRows.length - 1].end : 0;
 
 	return (
 		<div className={cn("space-y-4", className)}>
-
-			<div className="overflow-hidden rounded-md border">
+			<div ref={parentRef} className="overflow-auto rounded-md border" style={{ height }}>
 				<Table>
-					<TableHeader>
+					<TableHeader className="sticky top-0 z-10 bg-background">
 						{table.getHeaderGroups().map((headerGroup) => (
 							<TableRow key={headerGroup.id}>
 								<TableHead className="w-10 text-right text-muted-foreground">#</TableHead>
@@ -380,25 +393,43 @@ function DataTable({ columns, rows, onCellUpdate, className }: DataTableProps) {
 						))}
 					</TableHeader>
 					<TableBody>
-						{table.getRowModel().rows.length ? (
-							table.getRowModel().rows.map((row, i) => {
-								const rowNumber = pageIndex * pageSize + i + 1;
-								return (
-									<TableRow key={row.id}>
-										<TableCell className="w-10 text-right text-xs text-muted-foreground tabular-nums">
-											{rowNumber}
-										</TableCell>
-										{row.getVisibleCells().map((cell) => (
-											<TableCell key={cell.id}>
-												{flexRender(
-													cell.column.columnDef.cell,
-													cell.getContext(),
-												)}
-											</TableCell>
-										))}
+						{tableRows.length ? (
+							<>
+								{paddingTop > 0 && (
+									<TableRow>
+										<TableCell
+											colSpan={tableColumns.length + 1}
+											style={{ height: `${paddingTop}px`, padding: 0 }}
+										/>
 									</TableRow>
-								);
-							})
+								)}
+								{virtualRows.map((virtualRow) => {
+									const row = tableRows[virtualRow.index];
+									return (
+										<TableRow key={row.id}>
+											<TableCell className="w-10 text-right text-xs text-muted-foreground tabular-nums">
+												{virtualRow.index + 1}
+											</TableCell>
+											{row.getVisibleCells().map((cell) => (
+												<TableCell key={cell.id}>
+													{flexRender(
+														cell.column.columnDef.cell,
+														cell.getContext(),
+													)}
+												</TableCell>
+											))}
+										</TableRow>
+									);
+								})}
+								{paddingBottom > 0 && (
+									<TableRow>
+										<TableCell
+											colSpan={tableColumns.length + 1}
+											style={{ height: `${paddingBottom}px`, padding: 0 }}
+										/>
+									</TableRow>
+								)}
+							</>
 						) : (
 							<TableRow>
 								<TableCell
@@ -413,50 +444,9 @@ function DataTable({ columns, rows, onCellUpdate, className }: DataTableProps) {
 				</Table>
 			</div>
 
-			<div className="flex items-center justify-between px-2">
-				<p className="text-muted-foreground text-sm">
-					{table.getFilteredRowModel().rows.length} row(s) total
-				</p>
-				<div className="flex items-center gap-1">
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={() => table.previousPage()}
-						disabled={!table.getCanPreviousPage()}
-						aria-label="Previous page"
-					>
-						<ChevronLeft className="size-4" />
-					</Button>
-					{getPageNumbers(pageCount, pageIndex).map((page, idx) =>
-						page === "..." ? (
-							<span key={`ellipsis-${idx}`} className="px-1 text-muted-foreground text-sm select-none">
-								…
-							</span>
-						) : (
-							<Button
-								key={page}
-								variant={page === pageIndex ? "default" : "outline"}
-								size="sm"
-								className="min-w-8"
-								onClick={() => table.setPageIndex(page)}
-								aria-label={`Page ${page + 1}`}
-								aria-current={page === pageIndex ? "page" : undefined}
-							>
-								{page + 1}
-							</Button>
-						),
-					)}
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={() => table.nextPage()}
-						disabled={!table.getCanNextPage()}
-						aria-label="Next page"
-					>
-						<ChevronRight className="size-4" />
-					</Button>
-				</div>
-			</div>
+			<p className="text-muted-foreground text-sm px-2">
+				{tableRows.length} row(s) total
+			</p>
 		</div>
 	);
 }

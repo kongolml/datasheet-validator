@@ -8,6 +8,7 @@ import { DataTable } from "@/components/data-table";
 import { ValidationErrorsTable } from "@/components/validation-errors-table";
 import { FileUpload } from "@/components/file-upload";
 import { Button } from "@/components/ui/button";
+import { TooltipProvider } from "@/components/ui/tooltip"
 
 function App() {
 	const store = useMemo(() => new DataStore(), []);

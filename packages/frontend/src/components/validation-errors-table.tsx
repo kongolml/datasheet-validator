@@ -28,10 +28,14 @@ export function ValidationErrorsTable({
 
 	if (errorRows.length === 0) return null;
 
+	const ROW_HEIGHT = 44;
+	const HEADER_HEIGHT = 44;
+	const height = `${Math.min(errorRows.length * ROW_HEIGHT + HEADER_HEIGHT, 400)}px`;
+
 	return (
 		<Accordion type="single" collapsible>
 			<AccordionItem value="errors">
-				<AccordionTrigger className="text-base font-semibold text-destructive hover:no-underline">
+				<AccordionTrigger className="text-base font-semibold text-destructive hover:no-underline cursor-pointer">
 					Rows with errors ({errorRows.length})
 				</AccordionTrigger>
 
@@ -40,6 +44,7 @@ export function ValidationErrorsTable({
 						columns={columns}
 						rows={errorRows}
 						onCellUpdate={onCellUpdate}
+						height={height}
 					/>
 				</AccordionContent>
 			</AccordionItem>
