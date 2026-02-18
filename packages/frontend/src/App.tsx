@@ -5,6 +5,7 @@ import testData from "../../../test-data.json";
 
 // components
 import { DataTable } from "@/components/data-table";
+import { ValidationErrorsTable } from "@/components/validation-errors-table";
 import { FileUpload } from "@/components/file-upload";
 import { Button } from "@/components/ui/button";
 
@@ -53,7 +54,13 @@ function App() {
 			)}
 
 			{state.status === "loaded" && (
-				<div className="w-full max-w-5xl space-y-4">
+				<div className="w-full max-w-5xl space-y-8">
+					<ValidationErrorsTable
+						columns={state.data.columns}
+						rows={state.data.rows}
+						onCellUpdate={handleCellUpdate}
+					/>
+
 					<div className="flex items-center justify-between">
 						<p className="text-muted-foreground text-sm">
 							{state.data.metadata.fileName} · {state.data.metadata.rowCount}{" "}
@@ -63,11 +70,15 @@ function App() {
 							Upload new file
 						</Button>
 					</div>
-					<DataTable
-						columns={state.data.columns}
-						rows={state.data.rows}
-						onCellUpdate={handleCellUpdate}
-					/>
+
+					<div className="space-y-2">
+						<h2 className="text-base font-semibold">All rows</h2>
+						<DataTable
+							columns={state.data.columns}
+							rows={state.data.rows}
+							onCellUpdate={handleCellUpdate}
+						/>
+					</div>
 				</div>
 			)}
 		</div>

@@ -15,7 +15,7 @@ import type {
 	CellType,
 	ValidationError,
 } from "@data-validator/validator-mastermind";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, ChevronLeft, ChevronRight, OctagonAlert } from "lucide-react";
 
 import {
 	Table,
@@ -71,6 +71,18 @@ function parseEditValue(input: string, type: CellType): CellValue {
 		default:
 			return input;
 	}
+}
+
+function getPageNumbers(pageCount: number, currentPage: number): (number | "...")[] {
+	if (pageCount <= 7) return Array.from({ length: pageCount }, (_, i) => i);
+	const pages: (number | "...")[] = [0];
+	const start = Math.max(1, currentPage - 2);
+	const end = Math.min(pageCount - 2, currentPage + 2);
+	if (start > 1) pages.push("...");
+	for (let i = start; i <= end; i++) pages.push(i);
+	if (end < pageCount - 2) pages.push("...");
+	pages.push(pageCount - 1);
+	return pages;
 }
 
 interface EditableCellProps {
@@ -232,7 +244,7 @@ const EditableCell = memo(function EditableCell({
 					}
 				>
 					<span>{formatCellValue(value, columnType)}</span>
-					{hasErrors && <span className="text-destructive text-xs">!failed validation!</span>}
+					{hasErrors && <OctagonAlert size={16} className="text-destructive" />}
 				</div>
 			</PopoverTrigger>
 			<PopoverContent
@@ -339,15 +351,21 @@ function DataTable({ columns, rows, onCellUpdate, className }: DataTableProps) {
 		onSortingChange: setSorting,
 		state: { sorting },
 		getRowId: (row) => row.id,
+		initialState: { pagination: { pageSize: 50 } },
 	});
+
+	const { pageIndex, pageSize } = table.getState().pagination;
+	const pageCount = table.getPageCount();
 
 	return (
 		<div className={cn("space-y-4", className)}>
+
 			<div className="overflow-hidden rounded-md border">
 				<Table>
 					<TableHeader>
 						{table.getHeaderGroups().map((headerGroup) => (
 							<TableRow key={headerGroup.id}>
+								<TableHead className="w-10 text-right text-muted-foreground">#</TableHead>
 								{headerGroup.headers.map((header) => (
 									<TableHead key={header.id}>
 										{header.isPlaceholder
@@ -363,22 +381,28 @@ function DataTable({ columns, rows, onCellUpdate, className }: DataTableProps) {
 					</TableHeader>
 					<TableBody>
 						{table.getRowModel().rows.length ? (
-							table.getRowModel().rows.map((row) => (
-								<TableRow key={row.id}>
-									{row.getVisibleCells().map((cell) => (
-										<TableCell key={cell.id}>
-											{flexRender(
-												cell.column.columnDef.cell,
-												cell.getContext(),
-											)}
+							table.getRowModel().rows.map((row, i) => {
+								const rowNumber = pageIndex * pageSize + i + 1;
+								return (
+									<TableRow key={row.id}>
+										<TableCell className="w-10 text-right text-xs text-muted-foreground tabular-nums">
+											{rowNumber}
 										</TableCell>
-									))}
-								</TableRow>
-							))
+										{row.getVisibleCells().map((cell) => (
+											<TableCell key={cell.id}>
+												{flexRender(
+													cell.column.columnDef.cell,
+													cell.getContext(),
+												)}
+											</TableCell>
+										))}
+									</TableRow>
+								);
+							})
 						) : (
 							<TableRow>
 								<TableCell
-									colSpan={tableColumns.length}
+									colSpan={tableColumns.length + 1}
 									className="h-24 text-center"
 								>
 									No results.
@@ -393,22 +417,43 @@ function DataTable({ columns, rows, onCellUpdate, className }: DataTableProps) {
 				<p className="text-muted-foreground text-sm">
 					{table.getFilteredRowModel().rows.length} row(s) total
 				</p>
-				<div className="flex items-center gap-2">
+				<div className="flex items-center gap-1">
 					<Button
 						variant="outline"
 						size="sm"
 						onClick={() => table.previousPage()}
 						disabled={!table.getCanPreviousPage()}
+						aria-label="Previous page"
 					>
-						Previous
+						<ChevronLeft className="size-4" />
 					</Button>
+					{getPageNumbers(pageCount, pageIndex).map((page, idx) =>
+						page === "..." ? (
+							<span key={`ellipsis-${idx}`} className="px-1 text-muted-foreground text-sm select-none">
+								…
+							</span>
+						) : (
+							<Button
+								key={page}
+								variant={page === pageIndex ? "default" : "outline"}
+								size="sm"
+								className="min-w-8"
+								onClick={() => table.setPageIndex(page)}
+								aria-label={`Page ${page + 1}`}
+								aria-current={page === pageIndex ? "page" : undefined}
+							>
+								{page + 1}
+							</Button>
+						),
+					)}
 					<Button
 						variant="outline"
 						size="sm"
 						onClick={() => table.nextPage()}
 						disabled={!table.getCanNextPage()}
+						aria-label="Next page"
 					>
-						Next
+						<ChevronRight className="size-4" />
 					</Button>
 				</div>
 			</div>
@@ -416,4 +461,4 @@ function DataTable({ columns, rows, onCellUpdate, className }: DataTableProps) {
 	);
 }
 
-export { DataTable, buildColumns, type DataTableProps };
+export { DataTable };
