@@ -10,6 +10,8 @@ Custom validation rules (`required`, `min`, `max`, `pattern`, `min-length`, `max
 
 The validation module has separate methods for initialization of the store along with separate methods to parse, validate data.
 
+[![View Demo](https://img.shields.io/badge/View-Demo-blue?style=flat-square)](https://kongolml.github.io/datasheet-validator/)
+
 ## Packages
 
 
