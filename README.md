@@ -1,4 +1,4 @@
-# Data Validator
+# Datasheet Validator
 
 A monorepo SDK for uploading, reviewing, and correcting structured JSON data before it enters a system. Ships a framework-agnostic core package and a Vite-based demo app.
 

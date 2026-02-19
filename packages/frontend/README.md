@@ -1,4 +1,4 @@
-# Data Validator — Frontend
+# Datasheet Validator — Frontend
 
 Vite + React 19 demo app that consumes the `[@data-validator/validator-mastermind](../validator-mastermind)` SDK. Not a publishable package — it serves as the integration example and manual-testing ground for the core library.
 

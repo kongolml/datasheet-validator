@@ -41,7 +41,7 @@ function App() {
 
 	return (
 		<div className="flex min-h-screen flex-col items-center gap-8 px-6 py-12">
-			<h1 className="text-3xl font-bold">Data Validator</h1>
+			<h1 className="text-3xl font-bold">Datasheet Validator</h1>
 
 			{state.status === "idle" && <FileUpload onFile={handleFileUpload} />}
 
