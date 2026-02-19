@@ -336,9 +336,10 @@ interface DataTableProps {
 	onCellUpdate?: (rowId: string, columnKey: string, value: CellValue) => void;
 	className?: string;
 	height?: string;
+	getRowNumber?: (rowId: string) => number;
 }
 
-export function DataTable({ columns, rows, onCellUpdate, className, height = "600px" }: DataTableProps) {
+export function DataTable({ columns, rows, onCellUpdate, className, height = "600px", getRowNumber }: DataTableProps) {
 	const [sorting, setSorting] = useState<SortingState>([]);
 	const parentRef = useRef<HTMLDivElement>(null);
 
@@ -406,7 +407,7 @@ export function DataTable({ columns, rows, onCellUpdate, className, height = "60
 									return (
 										<TableRow key={row.id}>
 											<TableCell className="w-10 text-right text-xs text-muted-foreground tabular-nums">
-												{virtualRow.index + 1}
+												{getRowNumber ? getRowNumber(row.original.id) : virtualRow.index + 1}
 											</TableCell>
 											{row.getVisibleCells().map((cell) => (
 												<TableCell key={cell.id}>

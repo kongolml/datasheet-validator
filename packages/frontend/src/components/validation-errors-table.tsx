@@ -30,7 +30,9 @@ export function ValidationErrorsTable({
 
 	const ROW_HEIGHT = 44;
 	const HEADER_HEIGHT = 44;
-	const height = `${Math.min(errorRows.length * ROW_HEIGHT + HEADER_HEIGHT, 400)}px`;
+	const height = `${Math.min(errorRows.length * ROW_HEIGHT + HEADER_HEIGHT, 300)}px`;
+
+	const rowNumberMap = new Map(rows.map((r, i) => [r.id, i + 1]));
 
 	return (
 		<Accordion type="single" collapsible>
@@ -45,6 +47,7 @@ export function ValidationErrorsTable({
 						rows={errorRows}
 						onCellUpdate={onCellUpdate}
 						height={height}
+						getRowNumber={(id) => rowNumberMap.get(id) ?? 0}
 					/>
 				</AccordionContent>
 			</AccordionItem>

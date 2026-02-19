@@ -2,13 +2,21 @@
 
 A monorepo SDK for uploading, reviewing, and correcting structured JSON data before it enters a system. Ships a framework-agnostic core package and a Vite-based demo app.
 
+Built to address two interrelated concerns: keeping the review table **fast and usable with large datasets** — through virtualization, stable references, and targeted re-renders — and exposing the core logic as a **clean, framework-agnostic SDK** that can be loaded, queried, edited, and observed independently of any UI layer. React is a thin integration layer on top, not the source of truth.
+
+For performance sake and good UX  frontend uses table row virtualization, columns sorting option, separate list of errors in the data with option to immediately edit/fix table cells.
+
+Custom validation rules (`required`, `min`, `max`, `pattern`, `min-length`, `max-length`) and custom error messages can be passed using `DataStoreOptions` or added at any point with `store.addValidationRules()`, which triggers an immediate full re-validation.
+
+The validation module has separate methods for initialization of the store along with separate methods to parse, validate data.
+
 ## Packages
 
 
-| Package                                                                 | Description                                                         |
-| ----------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Package                              | Description                                                         |
+| ------------------------------------ | ------------------------------------------------------------------- |
 | @data-validator/validator-mastermind | Framework-agnostic core SDK — parsing, validation, state management |
-| frontend (React)                                         | Vite + React 19 demo app consuming the SDK                          |
+| frontend (React)                     | Vite + React 19 demo app consuming the SDK                          |
 
 
 ## Prerequisites
