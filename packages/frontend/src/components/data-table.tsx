@@ -173,7 +173,6 @@ const EditableCell = memo(function EditableCell({
 				return (
 					<Input
 						ref={inputRef}
-						type="text"
 						value={editValue}
 						onChange={(e) => setEditValue(e.target.value)}
 						onKeyDown={handleKeyDown}
@@ -185,7 +184,6 @@ const EditableCell = memo(function EditableCell({
 				return (
 					<Input
 						ref={inputRef}
-						type="number"
 						value={editValue}
 						onChange={(e) => setEditValue(e.target.value)}
 						onKeyDown={handleKeyDown}
@@ -340,7 +338,7 @@ interface DataTableProps {
 	height?: string;
 }
 
-function DataTable({ columns, rows, onCellUpdate, className, height = "600px" }: DataTableProps) {
+export function DataTable({ columns, rows, onCellUpdate, className, height = "600px" }: DataTableProps) {
 	const [sorting, setSorting] = useState<SortingState>([]);
 	const parentRef = useRef<HTMLDivElement>(null);
 
@@ -450,5 +448,3 @@ function DataTable({ columns, rows, onCellUpdate, className, height = "600px" }:
 		</div>
 	);
 }
-
-export { DataTable };

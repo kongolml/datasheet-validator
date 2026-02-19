@@ -24,8 +24,6 @@ export class DataStore {
   private state: DataStoreState = { status: "idle" };
   private subscribers: Set<Subscriber> = new Set();
   private options: Required<DataStoreOptions>;
-  private editHistory: CellEdit[] = [];
-
   constructor(options: DataStoreOptions = {}) {
     this.options = {
       ...DEFAULT_OPTIONS,
@@ -68,10 +66,6 @@ export class DataStore {
     return row?.cells[columnKey];
   }
 
-  getEditHistory(): readonly CellEdit[] {
-    return this.editHistory;
-  }
-
   // ── Data Loading ──────────────────────────────────────────────────────
 
   loadFromString(jsonString: string, fileName: string = "unknown"): void {
@@ -87,7 +81,6 @@ export class DataStore {
       const columnsWithRules = this.applyValidationRules(dataSet.columns);
       const validatedRows = validateAllRows(dataSet.rows, columnsWithRules);
 
-      this.editHistory = [];
       this.setState({
         status: "loaded",
         data: {
@@ -165,8 +158,6 @@ export class DataStore {
     const newRows = [...data.rows];
     newRows[rowIndex] = newRow;
 
-    this.editHistory.push({ rowId, columnKey, value });
-
     this.setState({
       status: "loaded",
       data: { ...data, rows: newRows },
@@ -200,7 +191,6 @@ export class DataStore {
       }
 
       newRows[rowIndex] = { ...row, cells: newCells, errors: newErrors };
-      this.editHistory.push(edit);
     }
 
     this.setState({
@@ -237,7 +227,6 @@ export class DataStore {
   // ── State Management ──────────────────────────────────────────────────
 
   reset(): void {
-    this.editHistory = [];
     this.setState({ status: "idle" });
   }
 

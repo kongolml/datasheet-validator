@@ -7,7 +7,7 @@ interface FileUploadProps {
 	error?: string;
 }
 
-function FileUpload({ onFile, error }: FileUploadProps) {
+export function FileUpload({ onFile, error }: FileUploadProps) {
 	const inputRef = useRef<HTMLInputElement>(null);
 	const [isDragging, setIsDragging] = useState(false);
 
@@ -101,5 +101,3 @@ function FileUpload({ onFile, error }: FileUploadProps) {
 		</div>
 	);
 }
-
-export { FileUpload, type FileUploadProps };
