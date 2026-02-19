@@ -7,8 +7,8 @@ A monorepo SDK for uploading, reviewing, and correcting structured JSON data bef
 
 | Package                                                                 | Description                                                         |
 | ----------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| `[@data-validator/validator-mastermind](packages/validator-mastermind)` | Framework-agnostic core SDK — parsing, validation, state management |
-| `[frontend](packages/frontend)`                                         | Vite + React 19 demo app consuming the SDK                          |
+| @data-validator/validator-mastermind | Framework-agnostic core SDK — parsing, validation, state management |
+| frontend (React)                                         | Vite + React 19 demo app consuming the SDK                          |
 
 
 ## Prerequisites
